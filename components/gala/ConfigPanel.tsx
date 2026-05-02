@@ -53,7 +53,7 @@ export default function ConfigPanel({ onGoToFixtures }: ConfigPanelProps) {
   }
 
   return (
-    <aside className="w-[300px] shrink-0 bg-[#0f1620] border-l border-[#1e2e40] sticky top-[58px] h-[calc(100vh-58px)] overflow-y-auto flex flex-col gap-5 p-5">
+    <aside className="w-[300px] shrink-0 bg-[#0f1620] border-l border-[#1e2e40] sticky top-0 h-[calc(100vh-58px)] overflow-y-auto flex flex-col gap-5 p-5">
 
       {/* ── Tournament Config ── */}
       <section className="border-b border-[#1e2e40] pb-5">

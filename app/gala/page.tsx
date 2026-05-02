@@ -68,7 +68,7 @@ function GalaApp() {
       </header>
 
       {/* ── Body ── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
 
         {tab === "setup" && (
           <>
