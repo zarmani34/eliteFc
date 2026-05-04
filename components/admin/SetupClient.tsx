@@ -195,7 +195,7 @@ export default function SetupClient({ initialTournament }: SetupClientProps) {
               <span>{p}</span>
               <button
                 onClick={() => removePlayer(p)}
-                className="text-[#3a5568] hover:text-red-400 text-base leading-none opacity-0 group-hover:opacity-100 transition-all"
+                className="text-[#3a5568] hover:text-red-400 text-base leading-none transition-all"
               >
                 ×
               </button>
