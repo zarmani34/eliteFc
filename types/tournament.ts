@@ -67,7 +67,7 @@ export interface ActiveTournament {
   groups: Group[];
   fixtures: Fixture[];
   knockout: Fixture[];
-  liveMatchId: number | null;
+  liveMatchId?: number | null;
   createdAt: string;
   updatedAt: string;
   // types/tournament.ts — add these fields to ActiveTournament
