@@ -15,7 +15,7 @@ export default async function FixturesPage() {
   return (
     <>
       <AdminNav />
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-6 pt-8 pb-28 sm:pb-8">
         <h1 className="text-2xl font-black tracking-widest text-[#c6f135] uppercase mb-1" style={{ fontFamily: "'Syne', sans-serif" }}>
           Fixtures
         </h1>
