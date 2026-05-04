@@ -11,7 +11,7 @@ import {
   groupByRound,
 } from "@/lib/format";
 import type { ActiveTournament, Award } from "@/types/tournament";
-import { getActiveTournament } from "@/lib/tournament.server";
+import { getActiveTournament } from "@/lib/tournament";
 
 export default function FixturesClient({
   tournament: initialTournament,
