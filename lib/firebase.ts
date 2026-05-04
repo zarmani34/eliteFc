@@ -8,6 +8,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  type Firestore,
 } from "firebase/firestore";
 import type { MonthRecord } from "@/types/gala";
 
@@ -20,18 +21,24 @@ const firebaseConfig = {
   appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+// ✅ Lazy singleton — only runs in the browser
+export function getDb(): Firestore {
+  if (typeof window === "undefined") {
+    throw new Error("Firestore can only be accessed client-side.");
+  }
+  const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  return getFirestore(app);
+}
 
-/** Save a completed month record to Firestore */
-export async function saveRecord(record: Omit<MonthRecord, "id" | "createdAt">): Promise<void> {
-  const ref = collection(db, "gala_records");
+export async function saveRecord(
+  record: Omit<MonthRecord, "id" | "createdAt">
+): Promise<void> {
+  const ref = collection(getDb(), "gala_records");
   await addDoc(ref, { ...record, createdAt: serverTimestamp() });
 }
 
-/** Fetch all records, newest first */
 export async function fetchRecords(): Promise<MonthRecord[]> {
-  const ref  = collection(db, "gala_records");
+  const ref  = collection(getDb(), "gala_records");
   const snap = await getDocs(query(ref, orderBy("createdAt", "desc")));
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<MonthRecord, "id">) }));
 }
