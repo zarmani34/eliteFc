@@ -23,7 +23,7 @@ export default function AdminNav() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 h-14.5 bg-[#06080b]/90 backdrop-blur-md border-b border-[#1e2e40] flex items-center justify-between px-6">
+      <header className="sticky top-0 z-30 h-[58px] bg-[#06080b]/90 backdrop-blur-md border-b border-[#1e2e40] flex items-center justify-between px-6">
         <div className="flex items-center gap-6">
           <Link href="/" className="font-black md:tracking-[4px] text-[#c6f135] text-sm uppercase" style={{ fontFamily: "'Syne', sans-serif" }}>
             ELITE FALCONS FC
