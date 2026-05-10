@@ -37,66 +37,66 @@ export function HeroSection({ tournament }: { tournament: ActiveTournament }) {
 
 // ── REGISTER ─────────────────────────────────────────────
 
-export function RegisterSection({ tournament }: { tournament: ActiveTournament }) {
-  const [name, setName]       = useState("");
-  const [status, setStatus]   = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [message, setMessage] = useState("");
+// export function RegisterSection({ tournament }: { tournament: ActiveTournament }) {
+//   const [name, setName]       = useState("");
+//   const [status, setStatus]   = useState<"idle" | "loading" | "success" | "error">("idle");
+//   const [message, setMessage] = useState("");
 
-  if (!tournament.registrationOpen) return null;
+//   if (!tournament.registrationOpen) return null;
 
-  async function handleRegister() {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    setStatus("loading");
-    try {
-      const res = await fetch("/api/tournament/players", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmed }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setStatus("success");
-      setMessage(`✅ ${trimmed} registered! Your name will appear below.`);
-      setName("");
-      setTimeout(() => setStatus("idle"), 4000);
-    } catch (err: unknown) {
-      setStatus("error");
-      setMessage(err instanceof Error ? err.message : "Registration failed");
-      setTimeout(() => setStatus("idle"), 4000);
-    }
-  }
+//   async function handleRegister() {
+//     const trimmed = name.trim();
+//     if (!trimmed) return;
+//     setStatus("loading");
+//     try {
+//       const res = await fetch("/api/tournament/players", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ name: trimmed }),
+//       });
+//       const data = await res.json();
+//       if (!res.ok) throw new Error(data.error);
+//       setStatus("success");
+//       setMessage(`✅ ${trimmed} registered! Your name will appear below.`);
+//       setName("");
+//       setTimeout(() => setStatus("idle"), 4000);
+//     } catch (err: unknown) {
+//       setStatus("error");
+//       setMessage(err instanceof Error ? err.message : "Registration failed");
+//       setTimeout(() => setStatus("idle"), 4000);
+//     }
+//   }
 
-  return (
-    <section className="py-10 px-6 max-w-lg mx-auto">
-      <h2 className="text-center text-sm uppercase tracking-widest text-[#8aaabb] font-semibold mb-4">
-        Register to Play
-      </h2>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleRegister()}
-          placeholder="Enter your name…"
-          className="flex-1 bg-[#0a1018] border border-[#243650] text-[#ddeeff] rounded-lg px-4 py-3 text-sm outline-none focus:border-[#c6f135] transition-colors"
-        />
-        <button
-          onClick={handleRegister}
-          disabled={status === "loading"}
-          className="bg-[#c6f135] text-[#060a02] font-bold text-sm px-6 rounded-lg hover:bg-[#d8ff40] transition-colors disabled:opacity-50 shrink-0"
-        >
-          {status === "loading" ? "…" : "Join"}
-        </button>
-      </div>
-      {status !== "idle" && (
-        <p className={`text-sm mt-3 text-center ${status === "success" ? "text-emerald-400" : "text-red-400"}`}>
-          {message}
-        </p>
-      )}
-    </section>
-  );
-}
+//   return (
+//     <section className="py-10 px-6 max-w-lg mx-auto">
+//       <h2 className="text-center text-sm uppercase tracking-widest text-[#8aaabb] font-semibold mb-4">
+//         Register to Play
+//       </h2>
+//       <div className="flex gap-2">
+//         <input
+//           type="text"
+//           value={name}
+//           onChange={(e) => setName(e.target.value)}
+//           onKeyDown={(e) => e.key === "Enter" && handleRegister()}
+//           placeholder="Enter your name…"
+//           className="flex-1 bg-[#0a1018] border border-[#243650] text-[#ddeeff] rounded-lg px-4 py-3 text-sm outline-none focus:border-[#c6f135] transition-colors"
+//         />
+//         <button
+//           onClick={handleRegister}
+//           disabled={status === "loading"}
+//           className="bg-[#c6f135] text-[#060a02] font-bold text-sm px-6 rounded-lg hover:bg-[#d8ff40] transition-colors disabled:opacity-50 shrink-0"
+//         >
+//           {status === "loading" ? "…" : "Join"}
+//         </button>
+//       </div>
+//       {status !== "idle" && (
+//         <p className={`text-sm mt-3 text-center ${status === "success" ? "text-emerald-400" : "text-red-400"}`}>
+//           {message}
+//         </p>
+//       )}
+//     </section>
+//   );
+// }
 
 // ── PLAYERS ──────────────────────────────────────────────
 

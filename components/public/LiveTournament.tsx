@@ -4,7 +4,6 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import {
   HeroSection,
-  RegisterSection,
   PlayersSection,
   GroupTablesSection,
   StandingsSection,
@@ -36,7 +35,7 @@ export default function LiveTournament({
   return (
     <div className="divide-y divide-[#1e2e40]/50">
       <HeroSection tournament={tournament} />
-      <RegisterSection tournament={tournament} />
+      {/* <RegisterSection tournament={tournament} /> */}
       <PlayersSection players={tournament.players} />
       <GroupTablesSection tournament={tournament} />
       <StandingsSection tournament={tournament} />
