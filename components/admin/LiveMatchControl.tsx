@@ -1,6 +1,7 @@
 "use client";
 // components/admin/LiveMatchControl.tsx
 import { useState } from "react";
+import { Check, Play } from "lucide-react";
 import type { Fixture } from "@/types/tournament";
 
 interface LiveMatchControlProps {
@@ -82,7 +83,7 @@ export default function LiveMatchControl({
         <span className="flex-1 text-sm font-semibold truncate text-right" style={{ color: aColor }}>
           {fixture.away}
         </span>
-        <span className="text-[#c6f135] text-xs ml-2 shrink-0">✓</span>
+        <Check className="h-4 w-4 text-[#c6f135] ml-2 shrink-0" aria-hidden="true" />
       </div>
     );
   }
@@ -185,7 +186,12 @@ if (isLive) {
           disabled={loading}
           className="flex-1 bg-[#c6f135] text-[#060a02] font-bold text-xs py-2 rounded-lg hover:bg-[#d8ff40] transition-colors disabled:opacity-40"
         >
-          {loading ? "Saving…" : "✓ End Match & Save Score"}
+          {loading ? "Saving..." : (
+            <span className="inline-flex items-center gap-1.5">
+              <Check className="h-3.5 w-3.5" aria-hidden="true" />
+              End Match & Save Score
+            </span>
+          )}
         </button>
         <button
           onClick={handleClearLive}
@@ -214,7 +220,12 @@ if (isLive) {
         disabled={loading}
         className="bg-red-500/20 text-red-400 border border-red-500/30 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-red-500/30 transition-colors shrink-0 opacity-0 group-hover:opacity-100"
       >
-        {loading ? "…" : "▶ Set Live"}
+        {loading ? "..." : (
+          <span className="inline-flex items-center gap-1.5">
+            <Play className="h-3.5 w-3.5" aria-hidden="true" />
+            Set Live
+          </span>
+        )}
       </button>
     </div>
   );

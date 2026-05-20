@@ -1,6 +1,7 @@
 "use client";
 // components/admin/FixturesClient.tsx
 import { useState } from "react";
+import { BadgeCheck, Trophy, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import StandingsTable from "@/components/shared/StandingsTable";
 import LiveMatchControl from "@/components/admin/LiveMatchControl";
@@ -78,15 +79,20 @@ export default function FixturesClient({
               disabled={generating}
               className="bg-[#c6f135] text-[#060a02] font-bold text-sm px-6 py-2.5 rounded-lg hover:bg-[#d8ff40] transition-colors disabled:opacity-50"
             >
-              {generating ? "Generating…" : "⚡ Generate Fixtures"}
+              {generating ? "Generating..." : (
+                <span className="inline-flex items-center gap-2">
+                  <Zap className="h-4 w-4" aria-hidden="true" />
+                  Generate Fixtures
+                </span>
+              )}
             </button>
           </>
         )}
         {hasFixtures && (
           <div className="flex items-center justify-between w-full flex-wrap gap-3">
-            <p className="text-emerald-400 text-sm">
-              ✅ {tournament.fixtures.length} group matches across{" "}
-              {rounds.length} rounds.
+            <p className="text-emerald-400 text-sm inline-flex items-center gap-2">
+              <BadgeCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>{tournament.fixtures.length} group matches across {rounds.length} rounds.</span>
             </p>
             <a
               href="/live"
@@ -150,16 +156,17 @@ export default function FixturesClient({
                       ? "Semi-Finals"
                       : stage === "third"
                         ? "3rd Place Play-off"
-                        : "🏆 Final";
+                        : "Final";
                   return (
                     <div key={stage} className="mb-4 last:mb-0">
                       <p
-                        className={`text-[11px] font-bold uppercase tracking-wider mb-2 ${
+                        className={`text-[11px] font-bold uppercase tracking-wider mb-2 inline-flex items-center gap-1.5 ${
                           stage === "final"
                             ? "text-[#ffc53d]"
                             : "text-[#8aaabb]"
                         }`}
                       >
+                        {stage === "final" && <Trophy className="h-3.5 w-3.5" aria-hidden="true" />}
                         {label}
                       </p>
                       {matches.map((f) => (
@@ -195,7 +202,10 @@ export default function FixturesClient({
               onClick={() => setAwardOpen(true)}
               className="w-full bg-[#ffc53d] text-[#0a0600] font-bold text-sm py-3 rounded-xl hover:bg-[#ffd060] transition-colors"
             >
-              🏆 Complete Month & Save Records
+              <span className="inline-flex items-center gap-2">
+                <Trophy className="h-4 w-4" aria-hidden="true" />
+                Complete Month & Save Records
+              </span>
             </button>
           </div>
         </div>
@@ -297,7 +307,10 @@ function AwardModal({
           className="text-[#ffc53d] font-black tracking-widest text-xl uppercase mb-5"
           style={{ fontFamily: "'Syne', sans-serif" }}
         >
-          🏆 Complete Month
+          <span className="inline-flex items-center gap-2">
+            <Trophy className="h-5 w-5" aria-hidden="true" />
+            Complete Month
+          </span>
         </h3>
 
         <div className="mb-4">
@@ -357,7 +370,7 @@ function AwardModal({
             disabled={saving}
             className="flex-1 bg-[#ffc53d] text-[#0a0600] font-bold text-sm py-2.5 rounded-lg hover:bg-[#ffd060] transition-colors disabled:opacity-50"
           >
-            {saving ? "Saving…" : "Save & Complete"}
+            {saving ? "Saving..." : "Save & Complete"}
           </button>
           <button
             onClick={onClose}

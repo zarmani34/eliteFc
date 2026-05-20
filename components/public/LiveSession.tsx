@@ -4,6 +4,7 @@
 // Updates instantly whenever admin changes live match or enters a score.
 
 import { useEffect, useState } from "react";
+import { CheckCircle2, Clock3, Hourglass, Trophy } from "lucide-react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { groupByRound, seedKnockout } from "@/lib/format";
@@ -42,7 +43,7 @@ export default function LiveSession({ initial }: LiveSessionProps) {
   if (tournament.status === "registration" || tournament.status === "drawn") {
     return (
       <div className="max-w-4xl mx-auto px-6 py-16 text-center">
-        <p className="text-3xl mb-3">⏳</p>
+        <Hourglass className="h-8 w-8 mx-auto mb-3 text-[#8aaabb]" aria-hidden="true" />
         <h2 className="text-xl font-bold text-[#ddeeff] mb-2">
           {tournament.name}
         </h2>
@@ -116,8 +117,9 @@ export default function LiveSession({ initial }: LiveSessionProps) {
       {/* ── COMPLETED MATCHES ── */}
       {(completedGroupFx.length > 0 || completedKo.length > 0) && (
         <section>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-[#8aaabb] mb-4">
-            ✅ Completed — {completedGroupFx.length + completedKo.length}{" "}
+          <h2 className="text-xs font-bold uppercase tracking-widest text-[#8aaabb] mb-4 inline-flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+            Completed — {completedGroupFx.length + completedKo.length}{" "}
             matches
           </h2>
           <div className="space-y-2">
@@ -150,8 +152,9 @@ export default function LiveSession({ initial }: LiveSessionProps) {
       {/* ── UPCOMING MATCHES ── */}
       {(rounds.length > 0 || upcomingKo.length > 0) && (
         <section>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-[#8aaabb] mb-4">
-            🕐 Upcoming
+          <h2 className="text-xs font-bold uppercase tracking-widest text-[#8aaabb] mb-4 inline-flex items-center gap-2">
+            <Clock3 className="h-4 w-4" aria-hidden="true" />
+            Upcoming
           </h2>
           <div className="space-y-2">
             {rounds.map((r) => (
@@ -181,7 +184,7 @@ export default function LiveSession({ initial }: LiveSessionProps) {
       {/* ── ALL DONE ── */}
       {tournament.status === "completed" && (
         <section className="text-center py-10">
-          <p className="text-4xl mb-3">🏆</p>
+          <Trophy className="h-10 w-10 mx-auto mb-3 text-[#ffc53d]" aria-hidden="true" />
           <h2
             className="text-2xl font-black text-[#ffc53d] tracking-widest uppercase mb-1"
             style={{ fontFamily: "'Syne', sans-serif" }}
@@ -338,6 +341,6 @@ function getStageLabel(f: Fixture): string {
   if (f.stage === "group") return `Group Stage · Round ${f.round}`;
   if (f.stage === "semi") return "Semi-Final";
   if (f.stage === "third") return "3rd Place Play-off";
-  if (f.stage === "final") return "🏆 Final";
+  if (f.stage === "final") return "Final";
   return "";
 }

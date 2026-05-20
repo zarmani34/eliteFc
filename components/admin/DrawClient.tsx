@@ -1,6 +1,7 @@
 "use client";
 // components/admin/DrawClient.tsx
 import { useState } from "react";
+import { BadgeCheck, Dices, TriangleAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import GroupCard from "@/components/shared/GroupCard";
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -48,21 +49,28 @@ export default function DrawClient({ tournament }: { tournament: ActiveTournamen
       {!drawn && (
         <div className="bg-[#131d28] border border-[#1e2e40] rounded-2xl p-5">
           {!canDraw ? (
-            <p className="text-[#ffc53d] text-sm">
-              ⚠ Need {needed} players. Currently {tournament.players.length} registered.
+            <p className="text-[#ffc53d] text-sm flex items-center gap-2 flex-wrap">
+              <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>Need {needed} players. Currently {tournament.players.length} registered.</span>
               <a href="/admin/setup" className="underline ml-2 hover:text-[#c6f135]">Go to Setup →</a>
             </p>
           ) : (
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              <p className="text-emerald-400 text-sm font-semibold">
-                ✅ Ready to draw! {tournament.players.length} players will be randomly split into {tournament.teams} teams.
+              <p className="text-emerald-400 text-sm font-semibold inline-flex items-center gap-2">
+                <BadgeCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>Ready to draw! {tournament.players.length} players will be randomly split into {tournament.teams} teams.</span>
               </p>
               <button
                 onClick={handleDraw}
                 disabled={loading}
                 className="bg-[#c6f135] text-[#060a02] font-bold text-sm px-6 py-2.5 rounded-lg hover:bg-[#d8ff40] transition-colors disabled:opacity-50 shrink-0"
               >
-                {loading ? "Drawing…" : "🎲 Run Draw"}
+                {loading ? "Drawing..." : (
+                  <span className="inline-flex items-center gap-2">
+                    <Dices className="h-4 w-4" aria-hidden="true" />
+                    Run Draw
+                  </span>
+                )}
               </button>
             </div>
           )}
@@ -74,8 +82,9 @@ export default function DrawClient({ tournament }: { tournament: ActiveTournamen
       {drawn && tournament.groups.length > 0 && (
         <>
           <div className="bg-[#0a1e10] border border-emerald-800/40 rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap">
-            <p className="text-emerald-400 text-sm font-semibold">
-              🎲 Draw complete! Teams have been assigned.
+            <p className="text-emerald-400 text-sm font-semibold inline-flex items-center gap-2">
+              <Dices className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>Draw complete! Teams have been assigned.</span>
             </p>
             <a
               href="/admin/fixtures"

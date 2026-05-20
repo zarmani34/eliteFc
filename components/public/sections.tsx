@@ -3,6 +3,7 @@
 // All public-facing landing page sections.
 
 import { useState } from "react";
+import { Medal, Trophy } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import GroupCard from "@/components/shared/GroupCard";
 import StandingsTable from "@/components/shared/StandingsTable";
@@ -57,7 +58,7 @@ export function HeroSection({ tournament }: { tournament: ActiveTournament }) {
 //       const data = await res.json();
 //       if (!res.ok) throw new Error(data.error);
 //       setStatus("success");
-//       setMessage(`✅ ${trimmed} registered! Your name will appear below.`);
+//       setMessage(`Success: ${trimmed} registered! Your name will appear below.`);
 //       setName("");
 //       setTimeout(() => setStatus("idle"), 4000);
 //     } catch (err: unknown) {
@@ -192,9 +193,12 @@ export function PreviousMonthsSection({ previous }: { previous: ArchivedTourname
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {previous.map((t) => (
           <div key={t.id} className="bg-[#131d28] border border-[#1e2e40] rounded-xl overflow-hidden">
-            <div className="bg-gradient-to-br from-[#0a1e10] to-[#0c1525] border-b border-[#1e2e40] px-5 py-4">
+            <div className="bg-linear-to-br from-[#0a1e10] to-[#0c1525] border-b border-[#1e2e40] px-5 py-4">
               <p className="text-[#c6f135] font-bold tracking-widest text-sm uppercase" style={{ fontFamily: "'Syne', sans-serif" }}>
-                🏆 {t.name}
+                <span className="inline-flex items-center gap-1.5">
+                  <Trophy className="h-4 w-4" aria-hidden="true" />
+                  {t.name}
+                </span>
               </p>
               <p className="text-[11px] text-[#8aaabb] mt-0.5">{t.month}</p>
             </div>
@@ -204,7 +208,10 @@ export function PreviousMonthsSection({ previous }: { previous: ArchivedTourname
               </p>
               {t.record.awards.map((a, i) => (
                 <p key={i} className="text-xs text-[#4ade80]">
-                  🏅 <span className="font-semibold text-[#ddeeff]">{a.label}:</span> {a.player}
+                  <span className="inline-flex items-center gap-1.5">
+                    <Medal className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span className="font-semibold text-[#ddeeff]">{a.label}:</span> {a.player}
+                  </span>
                 </p>
               ))}
             </div>

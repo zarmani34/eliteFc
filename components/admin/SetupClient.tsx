@@ -1,6 +1,7 @@
 "use client";
 // components/admin/SetupClient.tsx
 import { useState } from "react";
+import { BadgeCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import StatusBadge from "@/components/shared/StatusBadge";
 import type { ActiveTournament } from "@/types/tournament";
@@ -211,7 +212,10 @@ export default function SetupClient({ initialTournament }: SetupClientProps) {
       {tournament.players.length >= needed && tournament.status === "registration" && (
         <div className="bg-[#0a1e10] border border-emerald-800/40 rounded-2xl p-5 flex items-center justify-between gap-4">
           <p className="text-emerald-400 text-sm font-semibold">
-            ✅ All {needed} players registered. Ready for the draw!
+            <span className="inline-flex items-center gap-2">
+              <BadgeCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>All {needed} players registered. Ready for the draw!</span>
+            </span>
           </p>
           <a
             href="/admin/draw"

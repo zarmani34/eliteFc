@@ -21,7 +21,7 @@ const firebaseConfig = {
   appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// ✅ Lazy singleton — only runs in the browser
+// Lazy singleton — only runs in the browser
 export function getDb(): Firestore {
   if (typeof window === "undefined") {
     throw new Error("Firestore can only be accessed client-side.");

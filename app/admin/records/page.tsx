@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/auth";
 import { getPreviousTournaments } from "@/lib/tournament.server";
 import AdminNav from "@/components/admin/AdminNav";
+import { Medal, Trophy } from "lucide-react";
 
 export default async function RecordsPage() {
   const authed = await isAdminAuthenticated();
@@ -27,7 +28,10 @@ export default async function RecordsPage() {
               <div key={r.id} className="bg-[#131d28] border border-[#1e2e40] rounded-xl overflow-hidden">
                 <div className="bg-linear-to-br from-[#0a1e10] to-[#0c1525] border-b border-[#1e2e40] px-5 py-4">
                   <p className="text-[#c6f135] font-black tracking-widest text-sm uppercase" style={{ fontFamily: "'Syne', sans-serif" }}>
-                    🏆 {r.name}
+                    <span className="inline-flex items-center gap-1.5">
+                      <Trophy className="h-4 w-4" aria-hidden="true" />
+                      {r.name}
+                    </span>
                   </p>
                   <p className="text-[11px] text-[#8aaabb] mt-0.5">{r.month}</p>
                 </div>
@@ -37,7 +41,10 @@ export default async function RecordsPage() {
                   </p>
                   {r.record.awards.map((a, i) => (
                     <p key={i} className="text-xs text-[#4ade80]">
-                      🏅 <span className="font-semibold text-[#ddeeff]">{a.label}:</span> {a.player}
+                      <span className="inline-flex items-center gap-1.5">
+                        <Medal className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span className="font-semibold text-[#ddeeff]">{a.label}:</span> {a.player}
+                      </span>
                     </p>
                   ))}
                   <div className="pt-2 border-t border-[#1e2e40] mt-2">
