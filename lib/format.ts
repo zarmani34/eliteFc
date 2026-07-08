@@ -11,6 +11,18 @@ import type {
   Round,
 } from "@/types/tournament";
 
+// Team colours — matched to club identity where possible
+export const TEAM_NAMES: string[] = [
+  "Valencia",
+  "Everton",
+  "Sunderland",
+  "Roma",
+  "Como",
+  "Napoli",
+  "Fiorentina",
+  "Atalanta",
+];
+
 export const GROUP_COLORS: string[] = [
   "#f87171", "#60a5fa", "#4ade80", "#facc15",
   "#c084fc", "#fb923c", "#34d399", "#f472b6",
@@ -37,7 +49,7 @@ export function generateDraw(
   return Array.from({ length: teams }, (_, i): Group => {
     const chunk = shuffled.slice(i * ppt, (i + 1) * ppt);
     return {
-      label: String.fromCharCode(65 + i),
+      label: TEAM_NAMES[i] ?? String.fromCharCode(65 + i),
       color: GROUP_COLORS[i],
       slots: [
         ...chunk,
@@ -127,7 +139,7 @@ export function generateFixtures(
 
     for (let i = 0; i < count; i++) {
       if (teamIdx < groups.length) {
-        teamLabels.push(`Team ${groups[teamIdx++].label}`);
+        teamLabels.push(groups[teamIdx++].label);
       }
     }
 
@@ -196,8 +208,8 @@ export function calcStandings(
   fixtures
     .filter((f) => f.played && f.stage === "group")
     .forEach((f) => {
-      const hl = f.home.replace("Team ", "");
-      const al = f.away.replace("Team ", "");
+      const hl = f.home;
+      const al = f.away;
       const h  = table[hl];
       const a  = table[al];
       if (!h || !a) return;
@@ -241,19 +253,19 @@ export function seedKnockout(
   if (fmt.ko === "final") {
     const fin = seeded.find((f) => f.stage === "final");
     if (fin) {
-      fin.home = `Team ${fGroups[0]?.[0]?.label ?? "1st"}`;
-      fin.away = `Team ${fGroups[0]?.[1]?.label ?? "2nd"}`;
+      fin.home = fGroups[0]?.[0]?.label ?? "1st";
+      fin.away = fGroups[0]?.[1]?.label ?? "2nd";
     }
   } else {
     const sf1 = seeded.find((f) => f.group === "SF1");
     const sf2 = seeded.find((f) => f.group === "SF2");
     if (sf1) {
-      sf1.home = `Team ${fGroups[0]?.[0]?.label ?? "1A"}`;
-      sf1.away = `Team ${fGroups[1]?.[1]?.label ?? "2B"}`;
+      sf1.home = fGroups[0]?.[0]?.label ?? "1A";
+      sf1.away = fGroups[1]?.[1]?.label ?? "2B";
     }
     if (sf2) {
-      sf2.home = `Team ${fGroups[1]?.[0]?.label ?? "1B"}`;
-      sf2.away = `Team ${fGroups[0]?.[1]?.label ?? "2A"}`;
+      sf2.home = fGroups[1]?.[0]?.label ?? "1B";
+      sf2.away = fGroups[0]?.[1]?.label ?? "2A";
     }
     if (sf1?.played && sf2?.played) {
       const w1 = Number(sf1.hg) > Number(sf1.ag) ? sf1.home : sf1.away;

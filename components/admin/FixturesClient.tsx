@@ -1,8 +1,11 @@
 "use client";
 // components/admin/FixturesClient.tsx
-import { useState } from "react";
-import { BadgeCheck, Trophy, Zap } from "lucide-react";
-import { useRouter } from "next/navigation";
+// Uses a Firestore real-time listener so the page updates instantly
+// without needing router.refresh() — fixes the stale-data problem.
+
+import { useEffect, useState } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
+import { getDb } from "@/lib/firebase";
 import StandingsTable from "@/components/shared/StandingsTable";
 import LiveMatchControl from "@/components/admin/LiveMatchControl";
 import {
@@ -12,87 +15,120 @@ import {
   groupByRound,
 } from "@/lib/format";
 import type { ActiveTournament, Award } from "@/types/tournament";
-import { getActiveTournament } from "@/lib/tournament";
 
-export default function FixturesClient({
-  tournament: initialTournament,
-}: {
-  tournament: ActiveTournament;
-}) {
-  const router = useRouter();
+interface FixturesClientProps {
+  // Initial server-fetched data for fast first paint
+  initial: ActiveTournament | null;
+}
+
+export default function FixturesClient({ initial }: FixturesClientProps) {
+  const [tournament, setTournament] = useState<ActiveTournament | null>(initial);
   const [generating, setGenerating] = useState(false);
-  const [awardOpen, setAwardOpen] = useState(false);
-  const [tournament, setTournament] =
-    useState<ActiveTournament>(initialTournament);
+  const [awardOpen, setAwardOpen]   = useState(false);
+  const [error, setError]           = useState("");
+
+  // Subscribe to Firestore — updates instantly when any field changes
+  useEffect(() => {
+    const ref   = doc(getDb(), "tournaments", "active");
+    const unsub = onSnapshot(ref, (snap) => {
+      if (snap.exists()) {
+        setTournament({ id: snap.id, ...snap.data() } as ActiveTournament);
+      } else {
+        setTournament(null);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  if (!tournament) {
+    return (
+      <div className="bg-[#131d28] border border-[#1e2e40] rounded-2xl p-6">
+        <p className="text-[#ffc53d] text-sm">
+          No active tournament found.{" "}
+          <a href="/admin/setup" className="underline hover:text-[#c6f135]">
+            Go to Setup →
+          </a>
+        </p>
+      </div>
+    );
+  }
 
   const canGenerate = tournament.status === "drawn";
   const hasFixtures = tournament.fixtures.length > 0;
 
-  async function refetch() {
-    const updated = await getActiveTournament();
-    if (updated) setTournament(updated);
-  }
-
   const colorMap: Record<string, string> = {};
   tournament.groups.forEach((g) => {
-    colorMap[`Team ${g.label}`] = g.color;
+    colorMap[g.label] = g.color;
   });
-
-  async function generateFixtures() {
-    setGenerating(true);
-    try {
-      const res = await fetch("/api/tournament/scores", { method: "POST" });
-      if (!res.ok) throw new Error((await res.json()).error);
-      router.refresh();
-    } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed");
-    } finally {
-      setGenerating(false);
-    }
-  }
 
   const seededKo = hasFixtures
     ? seedKnockout(
         tournament.knockout,
         tournament.groups,
         tournament.fixtures,
-        tournament.teams,
+        tournament.teams
       )
     : tournament.knockout;
 
   const rounds = groupByRound(tournament.fixtures);
 
+  async function generateFixtures() {
+    setGenerating(true);
+    setError("");
+    try {
+      const res = await fetch("/api/tournament/scores", { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error);
+      }
+      // No router.refresh() needed — Firestore listener picks up the change
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to generate");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  // Called by LiveMatchControl after any live/score action
+  // No-op here since Firestore listener handles updates automatically
+  function handleRefresh() {
+    // intentionally empty — onSnapshot handles it
+  }
+
   return (
     <div className="space-y-5">
-      {/* Top bar */}
-      <div className="bg-[#131d28] border border-[#1e2e40] rounded-2xl p-5 flex items-center justify-between gap-4 flex-wrap">
+
+      {/* Top action bar */}
+      <div className="bg-[#131d28] border border-[#1e2e40] rounded-2xl p-5">
         {!canGenerate && !hasFixtures && (
-          <p className="text-[#ffc53d] text-sm">Complete the draw first.</p>
+          <p className="text-[#ffc53d] text-sm">
+            Complete the draw first before generating fixtures.{" "}
+            <a href="/admin/draw" className="underline hover:text-[#c6f135]">
+              Go to Draw →
+            </a>
+          </p>
         )}
+
         {canGenerate && (
-          <>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             <p className="text-[#8aaabb] text-sm">
-              Draw is complete. Generate round-by-round fixtures.
+              Draw complete. Generate the round-by-round match schedule.
             </p>
             <button
               onClick={generateFixtures}
               disabled={generating}
               className="bg-[#c6f135] text-[#060a02] font-bold text-sm px-6 py-2.5 rounded-lg hover:bg-[#d8ff40] transition-colors disabled:opacity-50"
             >
-              {generating ? "Generating..." : (
-                <span className="inline-flex items-center gap-2">
-                  <Zap className="h-4 w-4" aria-hidden="true" />
-                  Generate Fixtures
-                </span>
-              )}
+              {generating ? "Generating…" : "⚡ Generate Fixtures"}
             </button>
-          </>
+          </div>
         )}
+
         {hasFixtures && (
           <div className="flex items-center justify-between w-full flex-wrap gap-3">
-            <p className="text-emerald-400 text-sm inline-flex items-center gap-2">
-              <BadgeCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>{tournament.fixtures.length} group matches across {rounds.length} rounds.</span>
+            <p className="text-emerald-400 text-sm">
+              ✅ {tournament.fixtures.length} group matches across{" "}
+              {rounds.length} rounds. Updates are live.
             </p>
             <a
               href="/live"
@@ -103,20 +139,24 @@ export default function FixturesClient({
             </a>
           </div>
         )}
+
+        {error && <p className="text-red-400 text-xs mt-2">{error}</p>}
       </div>
 
       {hasFixtures && (
-        <div className="grid lg:grid-cols-2 gap-5 items-start">
-          {/* Left: round-by-round match list + knockout */}
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-5 items-start">
+
+          {/* ── Left: fixtures by round + knockout ── */}
           <div className="space-y-4">
-            {/* Group stage by round */}
+
+            {/* Group stage rounds */}
             <div className="bg-[#131d28] border border-[#1e2e40] rounded-2xl p-5">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-[11px] uppercase tracking-widest text-[#8aaabb] font-semibold">
                   Group Stage
                 </p>
                 <p className="text-[10px] text-[#3a5568]">
-                  Hover a match to set live
+                  Hover a match → Set Live
                 </p>
               </div>
 
@@ -135,7 +175,8 @@ export default function FixturesClient({
                       isLive={f.id === tournament.liveMatchId}
                       isKnockout={false}
                       colorMap={colorMap}
-                      onRefresh={() => refetch()}
+                      liveScore={f.id === tournament.liveMatchId ? tournament.liveScore : null}
+                      onRefresh={handleRefresh}
                     />
                   ))}
                 </div>
@@ -155,18 +196,17 @@ export default function FixturesClient({
                     stage === "semi"
                       ? "Semi-Finals"
                       : stage === "third"
-                        ? "3rd Place Play-off"
-                        : "Final";
+                      ? "3rd Place Play-off"
+                      : "🏆 Final";
                   return (
                     <div key={stage} className="mb-4 last:mb-0">
                       <p
-                        className={`text-[11px] font-bold uppercase tracking-wider mb-2 inline-flex items-center gap-1.5 ${
+                        className={`text-[11px] font-bold uppercase tracking-wider mb-2 ${
                           stage === "final"
                             ? "text-[#ffc53d]"
                             : "text-[#8aaabb]"
                         }`}
                       >
-                        {stage === "final" && <Trophy className="h-3.5 w-3.5" aria-hidden="true" />}
                         {label}
                       </p>
                       {matches.map((f) => (
@@ -176,7 +216,8 @@ export default function FixturesClient({
                           isLive={f.id === tournament.liveMatchId}
                           isKnockout={true}
                           colorMap={colorMap}
-                          onRefresh={() => refetch()}
+                          liveScore={f.id === tournament.liveMatchId ? tournament.liveScore : null}
+                          onRefresh={handleRefresh}
                         />
                       ))}
                     </div>
@@ -186,7 +227,7 @@ export default function FixturesClient({
             )}
           </div>
 
-          {/* Right: standings + save button */}
+          {/* ── Right: standings + complete button ── */}
           <div className="space-y-4">
             <div className="bg-[#131d28] border border-[#1e2e40] rounded-2xl p-5">
               <p className="text-[11px] uppercase tracking-widest text-[#8aaabb] font-semibold mb-4">
@@ -198,28 +239,29 @@ export default function FixturesClient({
                 teams={tournament.teams}
               />
             </div>
-            <button
-              onClick={() => setAwardOpen(true)}
-              className="w-full bg-[#ffc53d] text-[#0a0600] font-bold text-sm py-3 rounded-xl hover:bg-[#ffd060] transition-colors"
-            >
-              <span className="inline-flex items-center gap-2">
-                <Trophy className="h-4 w-4" aria-hidden="true" />
-                Complete Month & Save Records
-              </span>
-            </button>
+
+            {tournament.status !== "completed" ? (
+              <button
+                onClick={() => setAwardOpen(true)}
+                className="w-full bg-[#ffc53d] text-[#0a0600] font-bold text-sm py-3 rounded-xl hover:bg-[#ffd060] transition-colors"
+              >
+                🏆 Complete Month &amp; Save Records
+              </button>
+            ) : (
+              <div className="w-full bg-[#0a1e10] border border-emerald-800/40 text-emerald-400 font-semibold text-sm py-3 rounded-xl text-center">
+                ✅ Tournament completed and archived
+              </div>
+            )}
           </div>
         </div>
       )}
 
+      {/* Award modal */}
       {awardOpen && (
         <AwardModal
           tournament={tournament}
           onClose={() => setAwardOpen(false)}
-          onSaved={() => {
-            setAwardOpen(false);
-            router.push("/admin/records");
-            router.refresh();
-          }}
+          onSaved={() => setAwardOpen(false)}
         />
       )}
     </div>
@@ -245,7 +287,7 @@ function AwardModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const fin = tournament.knockout.find((f) => f.stage === "final" && f.played);
+  const fin       = tournament.knockout.find((f) => f.stage === "final" && f.played);
   const autoChamp = fin
     ? Number(fin.hg) > Number(fin.ag)
       ? fin.home
@@ -253,26 +295,28 @@ function AwardModal({
     : "";
 
   const [champion, setChampion] = useState(autoChamp);
-  const [awards, setAwards] = useState<Award[]>(
-    DEFAULT_AWARDS.map((label) => ({ label, player: "" })),
+  const [awards, setAwards]     = useState<Award[]>(
+    DEFAULT_AWARDS.map((label) => ({ label, player: "" }))
   );
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   function updateAward(i: number, key: keyof Award, val: string) {
     setAwards((prev) =>
-      prev.map((a, idx) => (idx === i ? { ...a, [key]: val } : a)),
+      prev.map((a, idx) => (idx === i ? { ...a, [key]: val } : a))
     );
   }
 
   async function handleSave() {
     if (!champion) {
-      alert("Please enter the champion name");
+      setSaveError("Please enter the champion name.");
       return;
     }
     setSaving(true);
+    setSaveError("");
     try {
-      const fmt = getFormat(tournament.teams);
-      let tIdx = 0;
+      const fmt    = getFormat(tournament.teams);
+      let tIdx     = 0;
       const standings = fmt.groups.flatMap((count) => {
         const labels: string[] = [];
         for (let i = 0; i < count; i++) {
@@ -294,7 +338,7 @@ function AwardModal({
       if (!res.ok) throw new Error((await res.json()).error);
       onSaved();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to save");
+      setSaveError(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -305,12 +349,9 @@ function AwardModal({
       <div className="bg-[#131d28] border border-[#243650] rounded-2xl p-6 w-full max-w-lg max-h-[88vh] overflow-y-auto">
         <h3
           className="text-[#ffc53d] font-black tracking-widest text-xl uppercase mb-5"
-          style={{ fontFamily: "'Syne', sans-serif" }}
+          style={{ fontFamily: "var(--font-syne), sans-serif" }}
         >
-          <span className="inline-flex items-center gap-2">
-            <Trophy className="h-5 w-5" aria-hidden="true" />
-            Complete Month
-          </span>
+          🏆 Complete Month
         </h3>
 
         <div className="mb-4">
@@ -329,10 +370,7 @@ function AwardModal({
         </p>
         <div className="space-y-2 mb-3">
           {awards.map((aw, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center"
-            >
+            <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
               <input
                 value={aw.label}
                 onChange={(e) => updateAward(i, "label", e.target.value)}
@@ -364,13 +402,17 @@ function AwardModal({
           + Add Award
         </button>
 
+        {saveError && (
+          <p className="text-red-400 text-xs mb-3">{saveError}</p>
+        )}
+
         <div className="flex gap-2">
           <button
             onClick={handleSave}
             disabled={saving}
             className="flex-1 bg-[#ffc53d] text-[#0a0600] font-bold text-sm py-2.5 rounded-lg hover:bg-[#ffd060] transition-colors disabled:opacity-50"
           >
-            {saving ? "Saving..." : "Save & Complete"}
+            {saving ? "Saving…" : "Save & Complete"}
           </button>
           <button
             onClick={onClose}

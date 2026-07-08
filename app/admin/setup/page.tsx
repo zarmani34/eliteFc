@@ -10,6 +10,7 @@ export default async function SetupPage() {
   if (!authed) redirect("/admin");
 
   const active = await getActiveTournament();
+  console.log("Active tournament:", active);
 
   return (
     <>

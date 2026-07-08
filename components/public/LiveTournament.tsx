@@ -36,7 +36,7 @@ export default function LiveTournament({
     <div className="divide-y divide-[#1e2e40]/50">
       <HeroSection tournament={tournament} />
       {/* <RegisterSection tournament={tournament} /> */}
-      <PlayersSection players={tournament.players} />
+      <PlayersSection tournament={tournament} />
       <GroupTablesSection tournament={tournament} />
       <StandingsSection tournament={tournament} />
       <PreviousMonthsSection previous={previous} />

@@ -19,17 +19,32 @@ export interface Fixture {
   home: string;
   away: string;
   stage: FixtureStage;
-  group: string; // fixture group label e.g. "X", "Y"
-  round: number; // which round this match belongs to (1, 2, 3…)
+  group: string;
+  round: number;
   hg: number | "";
   ag: number | "";
+  // Penalty shootout — only relevant in knockout when scores are level
+  penalties?: {
+    home: number;
+    away: number;
+  } | null;
   played: boolean;
 }
 
-// A single round containing multiple matches
 export interface Round {
   round: number;
   fixtures: Fixture[];
+}
+
+export interface LiveScore {
+  hg: number;
+  ag: number;
+  // Live penalty tracking
+  penalties?: {
+    home: number;
+    away: number;
+  } | null;
+  isPenalties?: boolean; // true when match has gone to shootout
 }
 
 export interface Award {
@@ -67,12 +82,10 @@ export interface ActiveTournament {
   groups: Group[];
   fixtures: Fixture[];
   knockout: Fixture[];
-  liveMatchId?: number | null;
+  liveMatchId: number | null;
+  liveScore: LiveScore | null;
   createdAt: string;
   updatedAt: string;
-  // types/tournament.ts — add these fields to ActiveTournament
-  liveHg?: number;
-  liveAg?: number;
 }
 
 export interface ArchivedTournament {

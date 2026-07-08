@@ -50,7 +50,7 @@ export default function StandingsTable({ groups, fixtures, teams }: StandingsTab
                       <td className="px-2 py-2">
                         <div className="flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full shrink-0" style={{ background: g?.color ?? "#8aaabb" }} />
-                          <span className="font-semibold">Team {r.label}</span>
+                          <span className="font-semibold" style={{ color: g?.color ?? "#8aaabb" }}>{r.label}</span>
                           {i < 2 && (
                             <span className="text-[10px] bg-[#0a3018] text-[#c6f135] font-bold px-1.5 py-0.5 rounded-full">Q</span>
                           )}
