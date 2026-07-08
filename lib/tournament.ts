@@ -69,6 +69,8 @@ export async function createTournament(
     groups: [],
     fixtures: [],
     knockout: [],
+    liveMatchId: null,
+    liveScore: null,
     createdAt: now(),
     updatedAt: now(),
   };
