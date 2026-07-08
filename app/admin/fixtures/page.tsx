@@ -20,7 +20,7 @@ export default async function FixturesPage() {
           Fixtures
         </h1>
         <p className="text-[#8aaabb] text-sm mb-8">Generate matches and enter scores.</p>
-        <FixturesClient tournament={active} />
+        <FixturesClient initial={active} />
       </div>
     </>
   );
