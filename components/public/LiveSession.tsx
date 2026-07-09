@@ -20,6 +20,7 @@ function safeActiveTournament(data: Record<string, unknown>, id: string): Active
     status: "registration",
     registrationOpen: true,
     players: [],
+    teamNames: [],
     groups: [],
     fixtures: [],
     knockout: [],
