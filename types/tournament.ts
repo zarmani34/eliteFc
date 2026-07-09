@@ -9,7 +9,7 @@ export type TournamentStatus =
 export type FixtureStage = "group" | "semi" | "third" | "final";
 
 export interface Group {
-  label: string;
+  label: string;  // club name e.g. "Valencia"
   color: string;
   slots: (string | null)[];
 }
@@ -23,11 +23,7 @@ export interface Fixture {
   round: number;
   hg: number | "";
   ag: number | "";
-  // Penalty shootout — only relevant in knockout when scores are level
-  penalties?: {
-    home: number;
-    away: number;
-  } | null;
+  penalties?: { home: number; away: number } | null;
   played: boolean;
 }
 
@@ -39,12 +35,8 @@ export interface Round {
 export interface LiveScore {
   hg: number;
   ag: number;
-  // Live penalty tracking
-  penalties?: {
-    home: number;
-    away: number;
-  } | null;
-  isPenalties?: boolean; // true when match has gone to shootout
+  isPenalties?: boolean;
+  penalties?: { home: number; away: number } | null;
 }
 
 export interface Award {
@@ -79,6 +71,7 @@ export interface ActiveTournament {
   status: TournamentStatus;
   registrationOpen: boolean;
   players: string[];
+  teamNames: string[];   // club names set at creation, e.g. ["Valencia","Everton",...]
   groups: Group[];
   fixtures: Fixture[];
   knockout: Fixture[];
@@ -93,6 +86,7 @@ export interface ArchivedTournament {
   name: string;
   month: string;
   players: string[];
+  teamNames: string[];
   groups: Group[];
   fixtures: Fixture[];
   knockout: Fixture[];

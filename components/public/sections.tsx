@@ -155,28 +155,28 @@ export function PlayersSection({ tournament }: { tournament: ActiveTournament })
 // ── GROUP TABLES ─────────────────────────────────────────
 
 export function GroupTablesSection({ tournament }: { tournament: ActiveTournament }) {
-  const { groups, teams, ppt, status } = tournament;
+  const { groups, teams, ppt, status, teamNames } = tournament;
 
   // Hide group tables when completed — final standings say more
   if (status === "completed") return null;
 
+  const COLORS = ["#f87171","#60a5fa","#4ade80","#facc15","#c084fc","#fb923c","#34d399","#f472b6"];
+
+  // Before draw: use teamNames from Firestore so real club names show immediately
   const displayGroups =
     groups.length > 0
       ? groups
       : Array.from({ length: teams }, (_, i) => ({
-          label: String.fromCharCode(65 + i),
-          color: [
-            "#f87171","#60a5fa","#4ade80","#facc15",
-            "#c084fc","#fb923c","#34d399","#f472b6",
-          ][i],
+          label: teamNames?.[i] ?? `Team ${i + 1}`,
+          color: COLORS[i],
           slots: Array<null>(ppt).fill(null),
         }));
 
   const subtitle =
     status === "registration"
-      ? "Teams will be assigned after the draw."
+      ? "Players will be assigned to these teams after the draw."
       : status === "drawn"
-      ? "Draw complete — teams assigned!"
+      ? "Draw complete — players have been assigned!"
       : "";
 
   return (

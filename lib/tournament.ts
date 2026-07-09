@@ -66,6 +66,7 @@ export async function createTournament(
     status: "registration",
     registrationOpen: true,
     players: [],
+    teamNames: [],
     groups: [],
     fixtures: [],
     knockout: [],
@@ -178,6 +179,7 @@ export async function completeMonth(record: TournamentRecord): Promise<void> {
     groups: active.groups,
     fixtures: active.fixtures,
     knockout: active.knockout,
+    teamNames: active.teamNames,
     record,
     archivedAt: now(),
   };

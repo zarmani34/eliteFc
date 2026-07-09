@@ -279,7 +279,7 @@ export default function LiveMatchControl({
             />
             <button onClick={handleEndMatch}
               disabled={loading || finalHg === "" || finalAg === ""}
-              className="flex-1 bg-[#c6f135] text-[#060a02] font-bold text-xs py-2.5 rounded-lg hover:bg-[#d8ff40] active:bg-[#c6f135] transition-colors disabled:opacity-40 touch-manipulation">
+              className="cursor-pointer flex-1 bg-[#c6f135] text-[#060a02] font-bold text-xs py-2.5 rounded-lg hover:bg-[#d8ff40] active:bg-[#c6f135] transition-colors disabled:opacity-40 touch-manipulation">
               {loading ? "…" : "✓ End Match"}
             </button>
           </div>

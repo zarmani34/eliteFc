@@ -1,8 +1,9 @@
 "use client";
 // components/admin/SetupClient.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import StatusBadge from "@/components/shared/StatusBadge";
+import { DEFAULT_TEAM_NAMES } from "@/lib/format";
 import type { ActiveTournament } from "@/types/tournament";
 
 interface SetupClientProps {
@@ -14,19 +15,33 @@ export default function SetupClient({ initialTournament }: SetupClientProps) {
   const [tournament] = useState<ActiveTournament | null>(initialTournament);
 
   const [form, setForm] = useState({ name: "", month: "", teams: "6", ppt: "8" });
-  const [creating, setCreating]     = useState(false);
+  const [teamNames, setTeamNames] = useState<string[]>(
+    DEFAULT_TEAM_NAMES.slice(0, 6)
+  );
+  const [creating, setCreating]       = useState(false);
   const [createError, setCreateError] = useState("");
   const [confirmState, setConfirmState] = useState<{
-    show: boolean;
-    previousStatus: string;
+    show: boolean; previousStatus: string;
   }>({ show: false, previousStatus: "" });
-
-  const [newPlayer, setNewPlayer]       = useState("");
+  const [newPlayer, setNewPlayer]     = useState("");
   const [playerLoading, setPlayerLoading] = useState(false);
-  const [playerError, setPlayerError]   = useState("");
+  const [playerError, setPlayerError] = useState("");
 
-  // Show create form when there's no tournament OR the current one is completed
   const showCreateForm = !tournament || tournament.status === "completed";
+
+  // Keep team name slots in sync with team count
+  useEffect(() => {
+    const n = parseInt(form.teams) || 6;
+    setTeamNames((prev) =>
+      Array.from({ length: n }, (_, i) =>
+        prev[i] ?? DEFAULT_TEAM_NAMES[i] ?? `Team ${i + 1}`
+      )
+    );
+  }, [form.teams]);
+
+  function updateTeamName(i: number, val: string) {
+    setTeamNames((prev) => prev.map((name, idx) => (idx === i ? val : name)));
+  }
 
   async function handleCreate(force = false) {
     setCreating(true);
@@ -35,10 +50,9 @@ export default function SetupClient({ initialTournament }: SetupClientProps) {
       const res = await fetch("/api/tournament/setup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, force }),
+        body: JSON.stringify({ ...form, teamNames, force }),
       });
       const data = await res.json();
-
       if (res.status === 409 && data.error === "CONFIRM_REQUIRED") {
         setConfirmState({ show: true, previousStatus: data.previousStatus });
         return;
@@ -82,7 +96,7 @@ export default function SetupClient({ initialTournament }: SetupClientProps) {
       setNewPlayer("");
       router.refresh();
     } catch (err: unknown) {
-      setPlayerError(err instanceof Error ? err.message : "Failed to add player");
+      setPlayerError(err instanceof Error ? err.message : "Failed");
     } finally {
       setPlayerLoading(false);
     }
@@ -99,6 +113,7 @@ export default function SetupClient({ initialTournament }: SetupClientProps) {
 
   // ── CREATE FORM ───────────────────────────────────────────
   if (showCreateForm) {
+    const n = parseInt(form.teams) || 6;
     return (
       <>
         {confirmState.show && (
@@ -110,51 +125,80 @@ export default function SetupClient({ initialTournament }: SetupClientProps) {
         )}
 
         {tournament?.status === "completed" && (
-          <div className="bg-[#0a1e10] border border-emerald-800/40 rounded-2xl p-5 mb-5 flex items-center justify-between gap-4 flex-wrap">
+          <div className="bg-[#0a1e10] border border-emerald-800/40 rounded-2xl p-4 mb-5 flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-emerald-400 text-sm font-semibold">
                 🏆 {tournament.name} is completed and archived.
               </p>
-              <p className="text-[#8aaabb] text-xs mt-0.5">
-                Start a new month below.
-              </p>
+              <p className="text-[#8aaabb] text-xs mt-0.5">Start a new month below.</p>
             </div>
             <StatusBadge status={tournament.status} />
           </div>
         )}
 
-        <div className="bg-[#131d28] border border-[#1e2e40] rounded-2xl p-6">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-[#8aaabb] mb-5">
-            {tournament?.status === "completed" ? "New Month" : "Create Tournament"}
-          </h2>
-          <div className="grid sm:grid-cols-2 gap-4 mb-4">
-            {[
-              { label: "Tournament Name", key: "name", placeholder: "e.g. June 2025 Gala", type: "text" },
-              { label: "Month",           key: "month", placeholder: "e.g. June 2025",      type: "text" },
-              { label: "Number of Teams (5–8)", key: "teams", placeholder: "6", type: "number" },
-              { label: "Players per Team",      key: "ppt",   placeholder: "8", type: "number" },
-            ].map(({ label, key, placeholder, type }) => (
-              <div key={key}>
-                <label className="block text-[11px] uppercase tracking-wider text-[#8aaabb] mb-1.5 font-semibold">
-                  {label}
-                </label>
-                <input
-                  type={type}
-                  value={form[key as keyof typeof form]}
-                  onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))}
-                  placeholder={placeholder}
-                  className="w-full bg-[#0a1018] border border-[#243650] text-[#ddeeff] rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#c6f135] transition-colors"
-                />
-              </div>
-            ))}
+        <div className="space-y-4">
+          {/* Tournament basics */}
+          <div className="bg-[#131d28] border border-[#1e2e40] rounded-2xl p-5">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-[#8aaabb] mb-4">
+              Tournament Details
+            </h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { label: "Tournament Name", key: "name", placeholder: "e.g. June 2025 Gala", type: "text" },
+                { label: "Month",           key: "month", placeholder: "e.g. June 2025",      type: "text" },
+                { label: "Number of Teams (5–8)", key: "teams", placeholder: "6", type: "number" },
+                { label: "Players per Team",      key: "ppt",   placeholder: "8", type: "number" },
+              ].map(({ label, key, placeholder, type }) => (
+                <div key={key}>
+                  <label className="block text-[11px] uppercase tracking-wider text-[#8aaabb] mb-1.5 font-semibold">
+                    {label}
+                  </label>
+                  <input
+                    type={type}
+                    value={form[key as keyof typeof form]}
+                    min={type === "number" ? (key === "teams" ? 5 : 2) : undefined}
+                    max={type === "number" ? (key === "teams" ? 8 : 11) : undefined}
+                    onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))}
+                    placeholder={placeholder}
+                    className="w-full bg-[#0a1018] border border-[#243650] text-[#ddeeff] rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#c6f135] transition-colors"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-          {createError && (
-            <p className="text-red-400 text-xs mb-3">{createError}</p>
-          )}
+
+          {/* Team names */}
+          <div className="bg-[#131d28] border border-[#1e2e40] rounded-2xl p-5">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-[#8aaabb] mb-1">
+              Team Names
+            </h2>
+            <p className="text-[#3a5568] text-xs mb-4">
+              Pre-filled with club names — edit freely. These appear on the live page from day one.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {Array.from({ length: n }, (_, i) => (
+                <div key={i}>
+                  <label className="block text-[10px] uppercase tracking-wider text-[#3a5568] mb-1 font-semibold">
+                    Team {i + 1}
+                  </label>
+                  <input
+                    type="text"
+                    value={teamNames[i] ?? ""}
+                    onChange={(e) => updateTeamName(i, e.target.value)}
+                    placeholder={DEFAULT_TEAM_NAMES[i]}
+                    className="w-full bg-[#0a1018] border border-[#243650] text-[#ddeeff] rounded-lg px-2.5 py-2 text-xs outline-none focus:border-[#c6f135] transition-colors"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {createError && <p className="text-red-400 text-xs">{createError}</p>}
+
           <button
             onClick={() => handleCreate(false)}
             disabled={creating || !form.name || !form.month}
-            className="bg-[#c6f135] text-[#060a02] font-bold text-sm px-6 py-2.5 rounded-lg hover:bg-[#d8ff40] transition-colors disabled:opacity-40"
+            className="w-full bg-[#c6f135] text-[#060a02] font-bold text-sm py-3 rounded-xl hover:bg-[#d8ff40] transition-colors disabled:opacity-40"
           >
             {creating ? "Creating…" : "Create Tournament"}
           </button>
@@ -165,6 +209,7 @@ export default function SetupClient({ initialTournament }: SetupClientProps) {
 
   // ── ACTIVE TOURNAMENT ─────────────────────────────────────
   const needed = tournament.teams * tournament.ppt;
+  const pct    = Math.min(100, Math.round((tournament.players.length / needed) * 100));
 
   return (
     <>
@@ -176,8 +221,8 @@ export default function SetupClient({ initialTournament }: SetupClientProps) {
         />
       )}
 
-      <div className="space-y-5">
-        {/* Tournament info card */}
+      <div className="space-y-4">
+        {/* Info card */}
         <div className="bg-[#131d28] border border-[#1e2e40] rounded-2xl p-5">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
@@ -185,78 +230,73 @@ export default function SetupClient({ initialTournament }: SetupClientProps) {
               <p className="text-[#8aaabb] text-sm">
                 {tournament.month} · {tournament.teams} teams · {tournament.ppt} per team
               </p>
+              {tournament.teamNames?.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {tournament.teamNames.map((n, i) => (
+                    <span key={i}
+                      className="text-[10px] px-2 py-0.5 rounded-full border border-[#1e2e40] text-[#8aaabb]"
+                      style={{ borderColor: `${["#f87171","#60a5fa","#4ade80","#facc15","#c084fc","#fb923c","#34d399","#f472b6"][i]}44`,
+                               color: ["#f87171","#60a5fa","#4ade80","#facc15","#c084fc","#fb923c","#34d399","#f472b6"][i] }}>
+                      {n}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <StatusBadge status={tournament.status} />
           </div>
 
           <div className="mt-4 flex gap-2 flex-wrap">
             {tournament.registrationOpen ? (
-              <button
-                onClick={() => toggleRegistration(false)}
-                className="bg-red-500/20 text-red-400 border border-red-500/30 font-semibold text-xs px-4 py-2 rounded-lg hover:bg-red-500/30 transition-colors"
-              >
+              <button onClick={() => toggleRegistration(false)}
+                className="bg-red-500/20 text-red-400 border border-red-500/30 font-semibold text-xs px-4 py-2 rounded-lg hover:bg-red-500/30 transition-colors">
                 Close Registration
               </button>
             ) : tournament.status === "registration" ? (
-              <button
-                onClick={() => toggleRegistration(true)}
-                className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold text-xs px-4 py-2 rounded-lg hover:bg-emerald-500/30 transition-colors"
-              >
+              <button onClick={() => toggleRegistration(true)}
+                className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold text-xs px-4 py-2 rounded-lg hover:bg-emerald-500/30 transition-colors">
                 Re-open Registration
               </button>
             ) : null}
           </div>
         </div>
 
-        {/* Player registration card */}
+        {/* Players */}
         <div className="bg-[#131d28] border border-[#1e2e40] rounded-2xl p-5">
           <div className="flex justify-between items-center mb-2">
-            <p className="text-sm font-semibold text-[#ddeeff]">Player Registration</p>
+            <p className="text-sm font-semibold text-[#ddeeff]">Players</p>
             <span className="text-sm text-[#8aaabb]">
               <span className="text-[#c6f135] font-bold">{tournament.players.length}</span>/{needed}
             </span>
           </div>
-
           <div className="bg-[#1e2e40] rounded-full h-2 overflow-hidden mb-4">
-            <div
-              className="h-full bg-[#c6f135] rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, (tournament.players.length / needed) * 100)}%` }}
-            />
+            <div className="h-full bg-[#c6f135] rounded-full transition-all duration-500"
+              style={{ width: `${pct}%` }} />
           </div>
 
           {tournament.status === "registration" && (
             <div className="flex gap-2 mb-3">
-              <input
-                type="text"
-                value={newPlayer}
+              <input type="text" value={newPlayer}
                 onChange={(e) => setNewPlayer(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addPlayer()}
                 placeholder="Add player name…"
                 className="flex-1 bg-[#0a1018] border border-[#243650] text-[#ddeeff] rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#c6f135] transition-colors"
               />
-              <button
-                onClick={addPlayer}
-                disabled={playerLoading}
-                className="bg-[#c6f135] text-[#060a02] font-bold text-sm px-5 rounded-lg hover:bg-[#d8ff40] transition-colors disabled:opacity-50 shrink-0"
-              >
+              <button onClick={addPlayer} disabled={playerLoading}
+                className="bg-[#c6f135] text-[#060a02] font-bold text-sm px-5 rounded-lg hover:bg-[#d8ff40] transition-colors disabled:opacity-50 shrink-0">
                 Add
               </button>
             </div>
           )}
-
           {playerError && <p className="text-red-400 text-xs mb-3">{playerError}</p>}
 
           <div className="flex flex-wrap gap-2">
             {tournament.players.map((p) => (
-              <div
-                key={p}
-                className="flex items-center gap-1.5 bg-[#0a1018] border border-[#243650] text-[#ddeeff] text-sm px-3 py-1.5 rounded-full group"
-              >
+              <div key={p}
+                className="flex items-center gap-1.5 bg-[#0a1018] border border-[#243650] text-[#ddeeff] text-sm px-3 py-1.5 rounded-full group">
                 <span>{p}</span>
-                <button
-                  onClick={() => removePlayer(p)}
-                  className="text-[#3a5568] hover:text-red-400 text-base leading-none opacity-0 group-hover:opacity-100 transition-all"
-                >
+                <button onClick={() => removePlayer(p)}
+                  className="text-[#3a5568] hover:text-red-400 text-base leading-none opacity-0 group-hover:opacity-100 transition-all">
                   ×
                 </button>
               </div>
@@ -269,14 +309,12 @@ export default function SetupClient({ initialTournament }: SetupClientProps) {
 
         {/* Ready for draw */}
         {tournament.players.length >= needed && tournament.status === "registration" && (
-          <div className="bg-[#0a1e10] border border-emerald-800/40 rounded-2xl p-5 flex items-center justify-between gap-4 flex-wrap">
+          <div className="bg-[#0a1e10] border border-emerald-800/40 rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap">
             <p className="text-emerald-400 text-sm font-semibold">
-              All {needed} players registered. Ready for the draw!
+              ✅ All {needed} players registered. Ready for the draw!
             </p>
-            <a
-              href="/admin/draw"
-              className="bg-[#c6f135] text-[#060a02] font-bold text-sm px-6 py-2.5 rounded-lg hover:bg-[#d8ff40] transition-colors shrink-0"
-            >
+            <a href="/admin/draw"
+              className="bg-[#c6f135] text-[#060a02] font-bold text-sm px-6 py-2.5 rounded-lg hover:bg-[#d8ff40] transition-colors shrink-0">
               Go to Draw →
             </a>
           </div>
@@ -289,15 +327,12 @@ export default function SetupClient({ initialTournament }: SetupClientProps) {
 // ── Confirmation Modal ────────────────────────────────────
 
 function ConfirmOverwriteModal({
-  previousStatus,
-  onConfirm,
-  onCancel,
+  previousStatus, onConfirm, onCancel,
 }: {
   previousStatus: string;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  const isOngoing = previousStatus === "ongoing";
   return (
     <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
       <div className="bg-[#131d28] border border-[#243650] rounded-2xl p-6 w-full max-w-md">
@@ -307,27 +342,21 @@ function ConfirmOverwriteModal({
         <p className="text-[#8aaabb] text-sm mb-2 leading-relaxed">
           The current tournament is still{" "}
           <span className="text-[#ddeeff] font-semibold">
-            {isOngoing ? "ongoing (matches being played)" : "in the draw stage"}
+            {previousStatus === "ongoing" ? "ongoing" : "in the draw stage"}
           </span>.
         </p>
         <p className="text-[#8aaabb] text-sm mb-5 leading-relaxed">
           Creating a new tournament will{" "}
-          <span className="text-[#ffc53d] font-semibold">
-            auto-archive the current one as-is
-          </span>{" "}
+          <span className="text-[#ffc53d] font-semibold">auto-archive the current one</span>{" "}
           without a champion or awards. Continue?
         </p>
         <div className="flex gap-3">
-          <button
-            onClick={onConfirm}
-            className="flex-1 bg-[#ffc53d] text-[#0a0600] font-bold text-sm py-2.5 rounded-lg hover:bg-[#ffd060] transition-colors"
-          >
+          <button onClick={onConfirm}
+            className="flex-1 bg-[#ffc53d] text-[#0a0600] font-bold text-sm py-2.5 rounded-lg hover:bg-[#ffd060] transition-colors">
             Yes, archive & create new
           </button>
-          <button
-            onClick={onCancel}
-            className="flex-1 border border-[#243650] text-[#8aaabb] font-semibold text-sm py-2.5 rounded-lg hover:border-[#c6f135] hover:text-[#c6f135] transition-colors"
-          >
+          <button onClick={onCancel}
+            className="flex-1 border border-[#243650] text-[#8aaabb] font-semibold text-sm py-2.5 rounded-lg hover:border-[#c6f135] hover:text-[#c6f135] transition-colors">
             Cancel
           </button>
         </div>

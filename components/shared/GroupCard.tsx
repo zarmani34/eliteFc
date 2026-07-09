@@ -32,7 +32,7 @@ export default function GroupCard({ group, showEmpty = true }: GroupCardProps) {
         {group.slots.map((name, si) => (
           <div
             key={si}
-            className="flex items-center gap-2 px-4 py-2 min-h-[36px] border-b border-[#ffffff06] last:border-0"
+            className="flex items-center gap-2 px-4 py-2 min-h-9 border-b border-[#ffffff06] last:border-0"
           >
             <span className="text-[11px] text-[#3a5568] font-semibold w-5 shrink-0">{si + 1}</span>
             {name ? (
